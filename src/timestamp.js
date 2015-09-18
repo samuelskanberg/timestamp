@@ -1,17 +1,28 @@
-var data = [
+/*var data = [
   {date: "2015-07-01", timestamps: [{start: '09:00', end: '12:00'}, {start: '13:00', end: '16:00'} ]},
-  {date: "2015-07-02", timestamps: [{start: '08:30', end: '12:00'}, {start: '13:00', end: '16:20'} ]}
-];
+  {date: "2015-07-02", timestamps: [{start: '08:30', end: '12:00'}, {start: '13:00', end: '16:20'} ]},
+  {date: "2015-07-03", timestamps: [{start: '08:30', end: '12:00'}, {start: '13:00', end: null} ]}
+];*/
 
 var DayBox = React.createClass({
   getInitialState: function() {
     return {data: []};
   },
   componentDidMount: function() {
-    this.setState(data);
+    $.ajax({
+      url: this.props.url,
+      dataType: 'json',
+      cache: false,
+      success: function(data) {
+        this.setState({data: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.url, status, err.toString());
+      }.bind(this)
+    });
   },
   render: function() {
-    var dayNodes = this.props.data.map(function (day) {
+    var dayNodes = this.state.data.map(function (day) {
       return (
         <Day date={day.date} hours={day.hours} timestamps={day.timestamps}></Day>
       );
@@ -40,8 +51,10 @@ var timestampHours = function(timestamps, timestampDate) {
   var seconds = 0;
   var date = new Date(timestampDate);
   for (var i = 0; i < timestamps.length; i++) {
-    var diffSeconds = timeDiff(timestamps[i].start, timestamps[i].end);
-    seconds += diffSeconds;
+    if (timestamps[i].end != null) {
+      var diffSeconds = timeDiff(timestamps[i].start, timestamps[i].end);
+      seconds += diffSeconds;
+    }
   }
   return secondsToTime(seconds);
 };
@@ -78,11 +91,11 @@ var Timestamp = React.createClass({
             {this.props.start}
           </li>
           <li className="timestampEnd">
-            {this.props.end}
+            {this.props.end != null ? this.props.end : "-"}
           </li>
           <li className="timestampDiff">
             <b>
-            {secondsToTime(timeDiff(this.props.start, this.props.end))}
+            {this.props.end != null ? secondsToTime(timeDiff(this.props.start, this.props.end)) : "-"}
             </b>
           </li>
         </ul>
@@ -92,6 +105,6 @@ var Timestamp = React.createClass({
 });
 
 React.render(
-  <DayBox data={data} />,
+  <DayBox url="days.json" />,
   document.getElementById('content')
 );
