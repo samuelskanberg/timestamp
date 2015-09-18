@@ -1,6 +1,6 @@
 var data = [
-  {date: "2015-07-01", hours: 8, timestamps: [{start: '09:00', end: '12:00'}, {start: '13:00', end: '16:00'} ]},
-  {date: "2015-07-02", hours: 8, timestamps: [{start: '08:30', end: '12:00'}, {start: '13:00', end: '16:30'} ]}
+  {date: "2015-07-01", timestamps: [{start: '09:00', end: '12:00'}, {start: '13:00', end: '16:00'} ]},
+  {date: "2015-07-02", timestamps: [{start: '08:30', end: '12:00'}, {start: '13:00', end: '16:20'} ]}
 ];
 
 var DayBox = React.createClass({
@@ -24,6 +24,27 @@ var DayBox = React.createClass({
     );
   }
 });
+var timeDiff = function(startTime, endTime) {
+  var date = "1970-01-01";
+  var startDate = new Date(date+'T'+startTime);
+  var endDate = new Date(date+'T'+endTime);
+  var diffSeconds = (endDate-startDate)/1000;
+  return diffSeconds;
+}
+var secondsToTime = function(seconds) {
+  var hours = Math.floor(seconds / (60*60));
+  var minutes = Math.floor(seconds % (60*60)) / 60;
+  return hours+":"+minutes;
+};
+var timestampHours = function(timestamps, timestampDate) {
+  var seconds = 0;
+  var date = new Date(timestampDate);
+  for (var i = 0; i < timestamps.length; i++) {
+    var diffSeconds = timeDiff(timestamps[i].start, timestamps[i].end);
+    seconds += diffSeconds;
+  }
+  return secondsToTime(seconds);
+};
 var Day = React.createClass({
   render: function() {
     var timestampNodes = this.props.timestamps.map(function (timestamp) {
@@ -31,6 +52,7 @@ var Day = React.createClass({
         <Timestamp start={timestamp.start} end={timestamp.end}></Timestamp>
       );
     });
+
     return (
       <div className="day">
         <h2 className="dayDate">
@@ -40,7 +62,7 @@ var Day = React.createClass({
           {timestampNodes}
         </div>
         <h3 className="dayHours">
-          {this.props.hours}
+          {timestampHours(this.props.timestamps, this.props.date)}
         </h3>
       </div>
     );
@@ -57,6 +79,11 @@ var Timestamp = React.createClass({
           </li>
           <li className="timestampEnd">
             {this.props.end}
+          </li>
+          <li className="timestampDiff">
+            <b>
+            {secondsToTime(timeDiff(this.props.start, this.props.end))}
+            </b>
           </li>
         </ul>
       </div>
